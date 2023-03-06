@@ -8,16 +8,20 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <form class="auth">
-        <label for="name" class="name-ask">Введите своё имя</label>
-        <br>
-        <input type="text" name="name" class="name">
-        <br>
-        <button type="submit" class="send-name">Готово</button>
-    </form>
+    <div class="users-counter"></div>
     <div class="chat">
         <ul class="messages"></ul>
         <form class="message-form">
+            <div class="typing"></div>
+            <div class="emojies-menu">
+                <button type="button">&#x1F600</button>
+                <button type="button">&#x1F607</button>
+                <button type="button">&#x1F60E</button>
+                <button type="button">&#x1F610</button>
+                <button type="button">&#x1F61B</button>
+                <button type="button">&#x1F627</button>
+            </div>
+            <button type="button" class="emojie-choice">&#x1F600</button>
             <input type="text" class="input" autocomplete="off" autofocus>
             <button type="submit" class="send-message">Send</button>
         </form>
@@ -30,16 +34,23 @@
         const auth = document.querySelector('.auth');
         const nameInput = document.querySelector('.name')
         const input = document.querySelector('.input');
+        const emojies = document.querySelector('.emojies-menu')
+        const emojiebtn = document.querySelector('.emojie-choice')
+        const connCounter = document.querySelector(".users-counter")
+        const block = document.querySelector('.typing');
 
         const socket = io();
+        const username = prompt("Введите свое имя", "");
+        socket.emit("new user", username);
 
-        auth.addEventListener('submit', e => {
-            e.preventDefault();
-            if(nameInput.value != "") {
-                socket.emit("new user", nameInput.value);
-                auth.style.display = "none"
-            }
+        emojies.addEventListener('click', e => {
+            input.value += e.target.innerText
         })
+
+        emojiebtn.addEventListener('click', () => {
+            emojies.classList.toggle('emnjies-menu_active')
+        })
+
 
         formMessage.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -49,12 +60,32 @@
             }
         });
 
+        input.addEventListener('keydown', () => {
+            socket.emit('type', username)
+            let text = input.value;
+            console.log('text ', text)
+            setTimeout(() => {
+                console.log("timout ", input.value)
+                if(input.value === "" || input.value === text) {
+                    block.innerHTML = "";
+                }
+            }, 380)
+        })
+
+        socket.on("typing", (username) => {
+            block.innerHTML = username + " печатает"
+        })
+
         socket.on('messageFromServer', (msg) => {
             const item = document.createElement('li');
-            item.textContent = msg;
+            item.innerHTML = msg;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         });
+
+        socket.on("counter", (total) => {
+            connCounter.textContent = `Всего участников: ${total}`
+        })
     </script>
 
     </script>

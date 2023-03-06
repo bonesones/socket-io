@@ -14,28 +14,39 @@ app.get('/', (req, res) => {
     res.sendFile('/index.html')
 })
 
-
+const COLORS = ["#FF0000", "#043A6B", "#A66100", "#D636C9"]
 
 
 const port = process.env.PORT || 3000;
 
+const connections = [];
 
-io.on("connection",function(client) {
+
+io.on("connection", function(client) {
     console.log('New websocket connection');
-    this.address = client.handshake.address
- client.on("new user", (username) => {
-    this.address = client.handshake.address;
-    client.username = username
-    io.emit('messageFromServer', username + " присоединился к чату")
- })
- client.on('messageFromClient', msg => {
-    const prefix = client.handshake.address === this.address ? client.username : "Вы"
-    io.emit('messageFromServer', prefix + ": " + msg);
-  });
+    client.on("new user", (username) => {
+        connections.push(client.id)
+        client.username = username
+        client.color = COLORS[Math.floor(Math.random() * COLORS.length)]
+        client.prefix = `<span style="color: ${client.color}">${username}</span>`
+        io.emit('messageFromServer', `${client.prefix} присоединился к чату`)
+        io.emit('counter', connections.length)
+    })
+
+
+    client.on('messageFromClient', msg => {
+        io.emit('messageFromServer', client.prefix + ": " + msg);
+    });
+
+    client.on('type', (username) => {
+        client.broadcast.emit('typing', username)
+    })
 
    client.on('disconnect', () => {
-    io.emit('messageFromServer', client.username + " отключился от сервера")
-    console.log('New websocket disconnected');
+        connections.splice(0, 1);
+        io.emit('counter', connections.length)
+        io.emit('messageFromServer', client.prefix + " отключился от сервера")
+        console.log('New websocket disconnected');
   });
 })
 
