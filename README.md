@@ -1,4 +1,5 @@
 # socket-io
+```mermaid
 erDiagram
     КЛИЕНТ ||--o{ СЧЕТ : имеет
     КЛИЕНТ ||--o{ КАРТА : имеет
@@ -34,3 +35,4 @@ erDiagram
         Срок date
         Статус string
     }
+```
